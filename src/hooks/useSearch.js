@@ -8,6 +8,12 @@ const useSearch = (query, pageNbr) => {
   const [hasMore, setHasMore] = useState(false);
   const URL = "http://openlibrary.org/search.json";
 
+  // resets output
+  useEffect(() => {
+    setBooks([]);
+  }, [query]);
+
+  // handles api call
   useEffect(() => {
     let cancel;
     setLoading(true);
@@ -22,14 +28,13 @@ const useSearch = (query, pageNbr) => {
         setLoading(false);
         setHasMore(res.data.docs.length > 0);
         setBooks((prevBooks) => {
-          return [...prevBooks, ...res.data.docs.map((book) => book.title)];
+          return [...new Set([...prevBooks, ...res.data.docs.map((book) => book.title)])];
         });
       })
       .catch((err) => {
-        setLoading(false);
         if (axios.isCancel(err)) return;
-
-        setError(err);
+        setLoading(false);
+        setError(true);
       });
 
     return () => cancel();
