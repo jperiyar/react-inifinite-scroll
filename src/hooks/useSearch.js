@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 
 const useSearch = (query, pageNbr) => {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [books, setBooks] = useState([]);
   const [hasMore, setHasMore] = useState(false);
@@ -16,28 +16,30 @@ const useSearch = (query, pageNbr) => {
   // handles api call
   useEffect(() => {
     let cancel;
-    setLoading(true);
-    setError(false);
-    axios({
-      method: "GET",
-      url: URL,
-      params: { q: query, page: pageNbr },
-      cancelToken: new axios.CancelToken((c) => (cancel = c))
-    })
-      .then((res) => {
-        setLoading(false);
-        setHasMore(res.data.docs.length > 0);
-        setBooks((prevBooks) => {
-          return [...new Set([...prevBooks, ...res.data.docs.map((book) => book.title)])];
-        });
+    if (query) {
+      setLoading(true);
+      setError(false);
+      axios({
+        method: "GET",
+        url: URL,
+        params: { q: query, page: pageNbr },
+        cancelToken: new axios.CancelToken((c) => (cancel = c))
       })
-      .catch((err) => {
-        if (axios.isCancel(err)) return;
-        setLoading(false);
-        setError(true);
-      });
+        .then((res) => {
+          setLoading(false);
+          setHasMore(res.data.docs.length > 0);
+          setBooks((prevBooks) => {
+            return [...new Set([...prevBooks, ...res.data.docs.map((book) => book.title)])];
+          });
+        })
+        .catch((err) => {
+          if (axios.isCancel(err)) return;
+          setLoading(false);
+          setError(true);
+        });
+    }
 
-    return () => cancel();
+    return () => cancel?.();
   }, [query, pageNbr]);
 
   return { loading, error, books, hasMore };
